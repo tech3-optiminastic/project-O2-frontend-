@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  // The app starts at the portal login — send the root straight there.
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/portal/login",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
