@@ -1,26 +1,221 @@
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap");
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   PROJECT O2 — Design System Tokens
+   Monochrome, editorial, luxury. No bright colors.
+   ============================================================ */
+
+@theme {
+  /* Palette */
+  --color-background: #f8f8f6; /* warm white */
+  --color-foreground: #111111; /* primary */
+  --color-secondary: #666666; /* muted text */
+  --color-silver: #dadada; /* soft silver accent */
+  --color-line: #e6e8ee; /* hairline borders (faint cool) */
+  --color-mist: #f0f1f5; /* faint panels */
+
+  /* Soft pastel accents — Apple-like ambient */
+  --color-sky: #cddef4; /* light light blue */
+  --color-sky-deep: #aecaec;
+  --color-sun: #f6ecc2; /* light shade of yellow */
+  --color-sun-deep: #f1e2a6;
+  --color-ink-80: rgba(17, 17, 17, 0.8);
+  --color-ink-60: rgba(17, 17, 17, 0.6);
+  --color-ink-40: rgba(17, 17, 17, 0.4);
+  --color-ink-12: rgba(17, 17, 17, 0.12);
+  --color-ink-06: rgba(17, 17, 17, 0.06);
+
+  /* Typography */
+  --font-sans: var(--font-inter), "SF Pro Display", system-ui, -apple-system, sans-serif;
+  --font-display: "General Sans", "Inter", "SF Pro Display", system-ui, sans-serif;
+  --font-mono: "Inter", ui-monospace, monospace;
+
+  /* Editorial type scale (fluid) */
+  --text-display: clamp(2.75rem, 7vw, 7.5rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.04em;
+
+  /* Easing + timing */
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Radii */
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.75rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================================
+   Base
+   ============================================================ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01", "cv11";
+    letter-spacing: -0.011em;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  /* Thin, elegant scrollbar */
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-silver);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   Reusable design-system utilities
+   ============================================================ */
+
+@layer utilities {
+  /* Editorial display heading */
+  .text-display {
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-display--letter-spacing);
+    font-weight: 200;
+  }
+
+  .tracking-eyebrow {
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+
+  /* The metallic frosted gradient — the soul of the orb + glass */
+  .metallic {
+    background:
+      radial-gradient(120% 120% at 30% 25%, #ffffff 0%, #f3f3f1 28%, #e3e3df 55%, #cfcfca 78%, #b9b9b3 100%),
+      conic-gradient(from 200deg at 70% 70%, rgba(255, 255, 255, 0.9), rgba(218, 218, 218, 0.35), rgba(255, 255, 255, 0.85));
+    background-blend-mode: screen, normal;
+  }
+
+  /* Glassmorphism panel */
+  .glass {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
+      0 30px 60px -25px rgba(17, 17, 17, 0.18),
+      0 8px 20px -12px rgba(17, 17, 17, 0.12);
+  }
+
+  .glass-strong {
+    background: rgba(248, 248, 246, 0.72);
+    backdrop-filter: blur(40px) saturate(150%);
+    -webkit-backdrop-filter: blur(40px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+  }
+
+  /* Subtle film grain overlay */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Apple-style ambient gradient — light blue top, warm yellow toward the bottom */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(78% 62% at 8% -4%, rgba(174, 202, 236, 0.55), transparent 58%),
+      radial-gradient(70% 55% at 98% 6%, rgba(198, 218, 242, 0.42), transparent 55%),
+      radial-gradient(82% 68% at 94% 102%, rgba(244, 232, 184, 0.6), transparent 60%),
+      radial-gradient(62% 58% at -4% 98%, rgba(246, 238, 200, 0.5), transparent 60%);
+  }
+
+  /* Page-wide fixed grain layer */
+  .grain-fixed {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .hairline {
+    border-color: var(--color-line);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide content until reveal, but keep it accessible */
+  .will-reveal {
+    will-change: transform, opacity, filter;
+  }
+}
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
