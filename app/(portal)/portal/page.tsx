@@ -55,6 +55,24 @@ export default function DashboardPage() {
   const { data, loading } = useApi<DashboardSummary>("/dashboard/summary");
   const [range, setRange] = useState<Range>("Monthly");
 
+  // Role-specific approval widget: the CEO sees what awaits their sign-off,
+  // the Manager sees what awaits a payment reference ID.
+  const queue = data?.approvals_queue ?? [];
+  const approvalView =
+    user?.role === "ADMIN_CEO"
+      ? {
+          title: "Pending your approval",
+          items: queue.filter((a) => a.status === "Submitted for CEO Approval"),
+          empty: "No requests awaiting your approval.",
+        }
+      : user?.role === "FINANCE_MANAGER"
+        ? {
+            title: "Pending payment reference",
+            items: queue.filter((a) => a.status === "Payment Ready"),
+            empty: "No payments awaiting a reference ID.",
+          }
+        : { title: "Payment approvals", items: queue, empty: "Nothing pending." };
+
   const series = useMemo(() => buildSeries(data?.cashflow ?? [], range), [data, range]);
   const totalRevenue = useMemo(() => series.reduce((s, d) => s + d.value, 0), [series]);
 
@@ -177,14 +195,14 @@ export default function DashboardPage() {
           {canApprovals && (
             <Panel>
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-light tracking-tight">Approval queue</h2>
+                <h2 className="text-lg font-light tracking-tight">{approvalView.title}</h2>
                 <Link href="/portal/approvals" className="text-xs text-secondary hover:text-foreground">
                   View all →
                 </Link>
               </div>
               <div className="flex flex-col gap-3">
-                {!data?.approvals_queue.length && <p className="text-sm text-ink-40">Nothing pending.</p>}
-                {data?.approvals_queue.map((a) => (
+                {!approvalView.items.length && <p className="text-sm text-ink-40">{approvalView.empty}</p>}
+                {approvalView.items.map((a) => (
                   <Link
                     key={a.id}
                     href="/portal/approvals"
