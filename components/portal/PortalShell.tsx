@@ -10,6 +10,7 @@ import {
   Users,
   FileText,
   Truck,
+  Handshake,
   Receipt,
   FileBarChart,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { useAuth, ROLE_LABELS } from "@/lib/auth";
+import { canAccessPath } from "@/lib/rbac";
 import { FloatingOrb } from "@/components/orb/FloatingOrb";
 import { Logo } from "@/components/ui/Logo";
 import { GridLoader } from "@/components/ui/GridLoader";
@@ -33,14 +35,17 @@ const navGroups = [
     items: [
       { href: "/portal", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { href: "/portal/invoices", label: "Invoices", icon: FileText },
-      { href: "/portal/vendors", label: "Vendors", icon: Truck },
       { href: "/portal/taxation", label: "Taxation", icon: Receipt },
       { href: "/portal/reports", label: "Reports", icon: FileBarChart },
     ],
   },
   {
-    title: "Customers",
-    items: [{ href: "/portal/clients", label: "Clients", icon: Users }],
+    title: "Onboarding",
+    items: [
+      { href: "/portal/agents", label: "Agents", icon: Handshake },
+      { href: "/portal/clients", label: "Clients", icon: Users },
+      { href: "/portal/vendors", label: "Vendors", icon: Truck },
+    ],
   },
   {
     title: "Management",
@@ -52,8 +57,6 @@ const navGroups = [
   },
 ];
 
-const allItems = navGroups.flatMap((g) => g.items);
-
 export function PortalShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
@@ -63,6 +66,11 @@ export function PortalShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user) router.replace("/portal/login");
   }, [loading, user, router]);
+
+  // Route block: a role hitting a module it can't access is bounced to the dashboard.
+  useEffect(() => {
+    if (!loading && user && !canAccessPath(user.role, pathname)) router.replace("/portal");
+  }, [loading, user, pathname, router]);
 
   // Persist collapse preference across navigation.
   useEffect(() => {
@@ -77,7 +85,8 @@ export function PortalShell({ children }: { children: ReactNode }) {
     });
   };
 
-  if (loading || !user) {
+  // While loading, logged out, or redirecting away from a forbidden module.
+  if (loading || !user || !canAccessPath(user.role, pathname)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-7">
         <GridLoader />
@@ -85,6 +94,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
       </div>
     );
   }
+
+  // Only show nav items this role is allowed to open.
+  const groups = navGroups
+    .map((g) => ({ ...g, items: g.items.filter((it) => canAccessPath(user.role, it.href)) }))
+    .filter((g) => g.items.length > 0);
+  const visibleItems = groups.flatMap((g) => g.items);
 
   return (
     <div className="relative min-h-screen">
@@ -125,7 +140,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className="flex flex-1 flex-col gap-6 overflow-y-auto">
-            {navGroups.map((group) => (
+            {groups.map((group) => (
               <div key={group.title}>
                 {!collapsed ? (
                   <p className="mb-2 px-3 text-[10px] tracking-eyebrow text-ink-40">{group.title}</p>
@@ -226,7 +241,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
           {/* Mobile nav scroller */}
           <div className="flex gap-2 overflow-x-auto border-b border-line/70 px-5 py-3 lg:hidden">
-            {allItems.map((item) => {
+            {visibleItems.map((item) => {
               const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
               return (
                 <Link

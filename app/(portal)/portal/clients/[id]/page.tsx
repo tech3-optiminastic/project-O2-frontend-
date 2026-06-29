@@ -1,0 +1,148 @@
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ArrowLeft, Mail, Phone, Building2, Lock } from "lucide-react";
+import { PortalShell } from "@/components/portal/PortalShell";
+import {
+  Panel,
+  MetricCard,
+  Table,
+  Row,
+  Cell,
+  Empty,
+  StatusPill,
+  DataField,
+} from "@/components/portal/ui";
+import { useApi } from "@/lib/useApi";
+import { fadeUp, stagger } from "@/lib/motion";
+import { formatINR, formatDate } from "@/lib/utils";
+import type { Client, Invoice, Agent } from "@/lib/api";
+
+export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+
+  const { data: client, loading } = useApi<Client>(id ? `/clients/${id}` : null);
+  const { data: invoices } = useApi<Invoice[]>(id ? `/invoices?client_id=${id}` : null);
+  const { data: agents } = useApi<Agent[]>("/agents");
+  const agent = agents?.find((a) => a.id === client?.agent_id);
+
+  const rows = invoices ?? [];
+  const totalBilled = rows.reduce((s, i) => s + i.total_amount, 0);
+  const received = rows.reduce((s, i) => s + i.amount_received, 0);
+  const pending = rows.reduce((s, i) => s + i.amount_pending, 0);
+  const gst = rows.reduce((s, i) => s + i.gst_amount, 0);
+  const tds = rows.reduce((s, i) => s + i.expected_tds, 0);
+
+  if (!loading && !client) {
+    return (
+      <PortalShell>
+        <Empty message="Client not found." />
+      </PortalShell>
+    );
+  }
+
+  return (
+    <PortalShell>
+      <motion.div
+        className="flex flex-col gap-8"
+        initial="hidden"
+        animate="show"
+        variants={stagger(0.08, 0.04)}
+      >
+        <motion.button
+          variants={fadeUp}
+          onClick={() => router.push("/portal/clients")}
+          className="inline-flex w-fit items-center gap-1.5 text-sm text-secondary transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> All clients
+        </motion.button>
+
+        {/* Identity header */}
+        <motion.div variants={fadeUp} className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-center gap-4">
+            <span className="metallic flex h-16 w-16 items-center justify-center rounded-2xl">
+              <Building2 className="h-6 w-6 text-foreground/70" />
+            </span>
+            <div>
+              <h1 className="font-sans text-4xl font-bold leading-[0.95] tracking-[-0.04em]">
+                {client?.business_name ?? "…"}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-secondary">
+                {client?.email && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5" /> {client.email}
+                  </span>
+                )}
+                {client?.phone && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5" /> {client.phone}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          {client?.category && <StatusPill status={client.category} />}
+        </motion.div>
+
+        {/* Taxation + receivables KPIs */}
+        <motion.div variants={fadeUp} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard label="Total billed" value={formatINR(totalBilled)} sub={`${rows.length} invoices`} spark={rows.map((i) => i.total_amount).slice(-9)} />
+          <MetricCard label="Received" value={formatINR(received)} sub="Settled to date" spark={rows.map((i) => i.amount_received).slice(-9)} />
+          <MetricCard label="Outstanding" value={formatINR(pending)} sub="Pending collection" spark={rows.map((i) => i.amount_pending).slice(-9)} />
+          <MetricCard label="GST charged" value={formatINR(gst)} sub={`TDS receivable ${formatINR(tds)}`} spark={rows.map((i) => i.gst_amount).slice(-9)} />
+        </motion.div>
+
+        {/* Profile details */}
+        <motion.div variants={fadeUp}>
+          <Panel>
+            <h2 className="mb-5 text-sm font-medium tracking-eyebrow text-secondary">Onboarding details</h2>
+            <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+              <DataField label="Registered legal name" value={client?.legal_name} />
+              <DataField label="GST number" value={client?.gst_number} mono />
+              <DataField label="Certificate of incorporation" value={client?.coi} mono />
+              <DataField label="Category" value={client?.category} />
+              <DataField
+                label="Referral agent"
+                value={agent ? `${agent.business_name} · ${agent.commission_rate}%` : null}
+              />
+              <DataField label="Onboarded" value={client ? formatDate(client.created_at) : null} />
+              <DataField label="Billing address" value={client?.billing_address} className="sm:col-span-2 lg:col-span-1" />
+              <DataField label="Notes" value={client?.notes} className="sm:col-span-2 lg:col-span-3" />
+            </div>
+          </Panel>
+        </motion.div>
+
+        {/* Invoices */}
+        <motion.div variants={fadeUp} className="flex flex-col gap-4">
+          <h2 className="text-sm font-medium tracking-eyebrow text-secondary">Invoices</h2>
+          {rows.length > 0 ? (
+            <Table head={["Invoice", "Date", "Total", "Pending", "Status", ""]}>
+              {rows.map((inv) => (
+                <Row key={inv.id} onClick={() => router.push(`/portal/invoices/${inv.id}`)}>
+                  <Cell className="font-medium">{inv.invoice_number}</Cell>
+                  <Cell className="text-ink-40">{formatDate(inv.invoice_date)}</Cell>
+                  <Cell className="tabular-nums">{formatINR(inv.total_amount)}</Cell>
+                  <Cell className="tabular-nums text-ink-40">{formatINR(inv.amount_pending)}</Cell>
+                  <Cell>
+                    <StatusPill status={inv.status} />
+                  </Cell>
+                  <Cell>
+                    {inv.is_locked && (
+                      <span className="inline-flex items-center gap-1 text-xs text-ink-40">
+                        <Lock className="h-3 w-3" /> Locked
+                      </span>
+                    )}
+                  </Cell>
+                </Row>
+              ))}
+            </Table>
+          ) : (
+            <Empty message="No invoices for this client yet." />
+          )}
+        </motion.div>
+      </motion.div>
+    </PortalShell>
+  );
+}

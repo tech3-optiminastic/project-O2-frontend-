@@ -50,7 +50,8 @@ function spark(seed: number): number[] {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprovals = hasRole("ADMIN_CEO", "CFO", "FINANCE_MANAGER");
   const { data, loading } = useApi<DashboardSummary>("/dashboard/summary");
   const [range, setRange] = useState<Range>("Monthly");
 
@@ -167,36 +168,38 @@ export default function DashboardPage() {
 
         {/* Approvals + recent invoices */}
         <motion.div
-          className="grid gap-6 lg:grid-cols-[1fr_1.4fr]"
+          className={canApprovals ? "grid gap-6 lg:grid-cols-[1fr_1.4fr]" : "grid gap-6"}
           variants={item}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
         >
-          <Panel>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-light tracking-tight">Approval queue</h2>
-              <Link href="/portal/approvals" className="text-xs text-secondary hover:text-foreground">
-                View all →
-              </Link>
-            </div>
-            <div className="flex flex-col gap-3">
-              {!data?.approvals_queue.length && <p className="text-sm text-ink-40">Nothing pending.</p>}
-              {data?.approvals_queue.map((a) => (
-                <Link
-                  key={a.id}
-                  href="/portal/approvals"
-                  className="flex items-center justify-between rounded-2xl border border-line bg-white/50 px-4 py-3 transition-colors hover:bg-mist/50"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{a.payee_name}</p>
-                    <p className="text-xs text-ink-40">{formatINR(a.net_payable)}</p>
-                  </div>
-                  <StatusPill status={a.status} />
+          {canApprovals && (
+            <Panel>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-light tracking-tight">Approval queue</h2>
+                <Link href="/portal/approvals" className="text-xs text-secondary hover:text-foreground">
+                  View all →
                 </Link>
-              ))}
-            </div>
-          </Panel>
+              </div>
+              <div className="flex flex-col gap-3">
+                {!data?.approvals_queue.length && <p className="text-sm text-ink-40">Nothing pending.</p>}
+                {data?.approvals_queue.map((a) => (
+                  <Link
+                    key={a.id}
+                    href="/portal/approvals"
+                    className="flex items-center justify-between rounded-2xl border border-line bg-white/50 px-4 py-3 transition-colors hover:bg-mist/50"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{a.payee_name}</p>
+                      <p className="text-xs text-ink-40">{formatINR(a.net_payable)}</p>
+                    </div>
+                    <StatusPill status={a.status} />
+                  </Link>
+                ))}
+              </div>
+            </Panel>
+          )}
 
           <div>
             <div className="mb-4 flex items-center justify-between">

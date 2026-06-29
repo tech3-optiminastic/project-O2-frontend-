@@ -25,7 +25,7 @@ export default function ApprovalsPage() {
       <div className="flex flex-col gap-8">
         <PageHeading
           title="Payment Approvals"
-          description="Every outgoing payment requires CFO then CEO sign-off before release."
+          description="CEO sign-off, then the Manager records the payment reference to complete it."
           action={
             <Button size="sm" magnetic={false} onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4" /> New request
@@ -97,7 +97,7 @@ function CreateApproval({ open, onOpenChange, onSaved }: { open: boolean; onOpen
   }
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} title="New payment approval" description="Submit a payout for CFO → CEO sign-off.">
+    <Modal open={open} onOpenChange={onOpenChange} title="New payment approval" description="Submit a payout for CEO sign-off.">
       <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Payee name">
           <input name="payee_name" required className={inputClass} />
@@ -135,6 +135,7 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [comment, setComment] = useState("");
+  const [reference, setReference] = useState("");
 
   async function act(path: string, body?: unknown) {
     setBusy(true);
@@ -142,6 +143,7 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
     try {
       await api.post(`/approvals/${approval.id}/${path}`, body);
       setComment("");
+      setReference("");
       onChanged();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Action failed");
@@ -151,10 +153,10 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
   }
 
   const s = approval.status;
-  const showSubmit = s === "Draft" || s === "CFO Rejected" || s === "CEO Rejected";
-  const showCfo = s === "Submitted for CFO Approval" && hasRole("CFO");
+  const showSubmit = s === "Draft" || s === "CEO Rejected";
   const showCeo = s === "Submitted for CEO Approval" && hasRole("ADMIN_CEO");
-  const showRelease = s === "Payment Ready" && hasRole("ADMIN_CEO", "CFO");
+  // After CEO approval the Manager (or CFO/CEO) records the payout reference to complete it.
+  const showRelease = s === "Payment Ready" && hasRole("ADMIN_CEO", "CFO", "FINANCE_MANAGER");
 
   return (
     <Modal open onOpenChange={(v) => !v && onClose()} title={approval.payee_name} description={approval.purpose ?? "Payment approval"}>
@@ -177,13 +179,17 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
           ))}
         </div>
         {approval.bank_details && <p className="text-sm text-secondary">Bank · {approval.bank_details}</p>}
+        {approval.payment_reference && (
+          <div className="flex items-center gap-2 rounded-2xl border border-line bg-mist/50 px-4 py-3 text-sm">
+            <span className="text-xs tracking-eyebrow text-secondary">Payment reference</span>
+            <span className="font-medium tabular-nums">{approval.payment_reference}</span>
+          </div>
+        )}
 
         {/* Actions */}
-        {(showCfo || showCeo) && (
+        {showCeo && (
           <Panel className="!rounded-2xl">
-            <p className="mb-3 text-sm font-medium">
-              {showCfo ? "CFO decision" : "CEO decision"}
-            </p>
+            <p className="mb-3 text-sm font-medium">CEO decision</p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -192,21 +198,10 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
               className={inputClass + " h-auto py-2.5"}
             />
             <div className="mt-3 flex gap-3">
-              <Button
-                size="sm"
-                magnetic={false}
-                disabled={busy}
-                onClick={() => act(showCfo ? "cfo" : "ceo", { approve: true, comment })}
-              >
+              <Button size="sm" magnetic={false} disabled={busy} onClick={() => act("ceo", { approve: true, comment })}>
                 <Check className="h-4 w-4" /> Approve
               </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                magnetic={false}
-                disabled={busy}
-                onClick={() => act(showCfo ? "cfo" : "ceo", { approve: false, comment })}
-              >
+              <Button size="sm" variant="secondary" magnetic={false} disabled={busy} onClick={() => act("ceo", { approve: false, comment })}>
                 <X className="h-4 w-4" /> Reject
               </Button>
             </div>
@@ -215,13 +210,32 @@ function ApprovalDetail({ approval, onClose, onChanged }: { approval: Approval; 
 
         {showSubmit && (
           <Button size="sm" magnetic={false} disabled={busy} onClick={() => act("submit")}>
-            Submit for CFO approval
+            Submit for CEO approval
           </Button>
         )}
         {showRelease && (
-          <Button size="sm" magnetic={false} disabled={busy} onClick={() => act("release")}>
-            Release payment
-          </Button>
+          <Panel className="!rounded-2xl">
+            <p className="text-sm font-medium">Complete payment</p>
+            <p className="mt-1 text-xs text-secondary">
+              Approved by the CEO. Make the payout, then enter its bank reference ID to mark it successful.
+            </p>
+            <input
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="Payment reference / UTR (required)"
+              className={inputClass + " mt-3"}
+            />
+            <div className="mt-3 flex justify-end">
+              <Button
+                size="sm"
+                magnetic={false}
+                disabled={busy || !reference.trim()}
+                onClick={() => act("release", { payment_reference: reference.trim() })}
+              >
+                <Check className="h-4 w-4" /> Mark paid &amp; complete
+              </Button>
+            </div>
+          </Panel>
         )}
         {error && <p className="text-sm text-foreground/80">⚠ {error}</p>}
 

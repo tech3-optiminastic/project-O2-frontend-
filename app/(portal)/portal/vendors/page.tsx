@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, BadgeCheck } from "lucide-react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { PageHeading, Table, Row, Cell, Empty, Field, inputClass, StatusPill } from "@/components/portal/ui";
@@ -13,6 +14,7 @@ import { api, ApiError, type Vendor } from "@/lib/api";
 export default function VendorsPage() {
   const { data, loading, refetch } = useApi<Vendor[]>("/vendors");
   const { hasRole } = useAuth();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function VendorsPage() {
         {data && data.length > 0 ? (
           <Table head={["Vendor", "GST / PAN", "Bank", "Status", ""]}>
             {data.map((v) => (
-              <Row key={v.id}>
+              <Row key={v.id} onClick={() => router.push(`/portal/vendors/${v.id}`)}>
                 <Cell className="font-medium">
                   {v.business_name}
                   <span className="block text-xs text-ink-40">{v.email}</span>
@@ -66,7 +68,10 @@ export default function VendorsPage() {
                 <Cell>
                   {!v.is_verified && canManage && (
                     <button
-                      onClick={() => verify(v.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        verify(v.id);
+                      }}
                       disabled={busy === v.id}
                       className="inline-flex items-center gap-1.5 text-xs text-secondary transition-colors hover:text-foreground"
                     >
@@ -115,6 +120,9 @@ function VendorForm({ open, onOpenChange, onSaved }: { open: boolean; onOpenChan
         <Field label="Business name">
           <input name="business_name" required className={inputClass} />
         </Field>
+        <Field label="Registered legal name">
+          <input name="legal_name" className={inputClass} />
+        </Field>
         <Field label="Contact person">
           <input name="contact_person" className={inputClass} />
         </Field>
@@ -142,6 +150,20 @@ function VendorForm({ open, onOpenChange, onSaved }: { open: boolean; onOpenChan
         <Field label="IFSC code">
           <input name="ifsc_code" className={inputClass} />
         </Field>
+        <div className="sm:col-span-2">
+          <Field label="Business address">
+            <input name="address" className={inputClass} />
+          </Field>
+        </div>
+        <Field label="Compliance documents (reference / link)">
+          <input name="compliance_documents" className={inputClass} />
+        </Field>
+        <Field label="Annual Service Contract (reference / link)">
+          <input name="annual_service_contract" className={inputClass} />
+        </Field>
+        <label className="flex items-center gap-2 text-sm font-light text-secondary sm:col-span-2">
+          <input type="checkbox" name="tax_applicable" defaultChecked className="accent-foreground" /> Tax applicable on vendor payments
+        </label>
         {error && <p className="sm:col-span-2 text-sm text-foreground/80">⚠ {error}</p>}
         <div className="sm:col-span-2 flex justify-end gap-3 pt-1">
           <Button type="button" variant="secondary" magnetic={false} onClick={() => onOpenChange(false)}>

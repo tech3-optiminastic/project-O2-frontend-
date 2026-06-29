@@ -122,6 +122,26 @@ export interface ApprovalQueueItem {
   status: string;
 }
 
+export interface Agent {
+  id: number;
+  business_name: string;
+  legal_name?: string | null;
+  contact_person?: string | null;
+  email: string;
+  phone?: string | null;
+  address?: string | null;
+  gst_number?: string | null;
+  pan?: string | null;
+  bank_account_holder?: string | null;
+  bank_name?: string | null;
+  account_number?: string | null;
+  ifsc_code?: string | null;
+  commission_rate: number;
+  is_active: boolean;
+  notes?: string | null;
+  created_at: string;
+}
+
 export interface Client {
   id: number;
   business_name: string;
@@ -133,6 +153,7 @@ export interface Client {
   coi?: string | null;
   category?: string | null;
   notes?: string | null;
+  agent_id?: number | null;
   created_at: string;
 }
 
@@ -146,12 +167,14 @@ export interface Payment {
   tds_deducted: number;
   gst_component: number;
   remarks?: string | null;
+  attachment?: string | null;
 }
 
 export interface Invoice {
   id: number;
   invoice_number: string;
   client_id: number;
+  agent_id?: number | null;
   invoice_date: string;
   due_date?: string | null;
   service_description?: string | null;
@@ -172,6 +195,7 @@ export interface Invoice {
   gst_status: string;
   is_locked: boolean;
   locked_at?: string | null;
+  supporting_document?: string | null;
   internal_remarks?: string | null;
   created_at: string;
   payments?: Payment[];
@@ -184,15 +208,35 @@ export interface Vendor {
   contact_person?: string | null;
   email: string;
   phone?: string | null;
+  address?: string | null;
   gst_number?: string | null;
   pan?: string | null;
   bank_account_holder?: string | null;
   bank_name?: string | null;
   account_number?: string | null;
   ifsc_code?: string | null;
+  tax_applicable?: boolean;
+  compliance_documents?: string | null;
+  annual_service_contract?: string | null;
   approval_status: string;
   is_verified: boolean;
   created_at: string;
+}
+
+export interface Allocation {
+  id: number;
+  vendor_id: number;
+  client_id?: number | null;
+  project_name: string;
+  scope_of_work?: string | null;
+  agreed_cost: number;
+  vendor_margin: number;
+  allocation_percent: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  expected_report_date?: string | null;
+  internal_owner?: string | null;
+  status: string;
 }
 
 export interface VendorInvoice {
@@ -227,6 +271,7 @@ export interface Approval {
   status: string;
   cfo_comment?: string | null;
   ceo_comment?: string | null;
+  payment_reference?: string | null;
   released_at?: string | null;
   created_at: string;
   actions?: ApprovalAction[];

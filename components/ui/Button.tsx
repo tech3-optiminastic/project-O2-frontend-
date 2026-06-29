@@ -7,12 +7,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium tracking-tight transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 hover:-translate-y-px before:pointer-events-none before:absolute before:-inset-px before:rounded-full before:opacity-0 before:transition-opacity before:duration-500 hover:before:opacity-100 before:[background:radial-gradient(120%_120%_at_50%_-20%,rgba(255,255,255,0.35),transparent_60%)]",
+  "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium tracking-tight outline-none transition-[color,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 before:pointer-events-none before:absolute before:-inset-px before:rounded-full before:opacity-0 before:transition-opacity before:duration-700 before:ease-[cubic-bezier(0.22,1,0.36,1)] hover:before:opacity-100 before:[background:radial-gradient(120%_120%_at_50%_-20%,rgba(255,255,255,0.4),transparent_60%)]",
   {
     variants: {
       variant: {
         primary:
-          "bg-foreground text-background hover:bg-foreground/90 shadow-[0_10px_30px_-12px_rgba(17,17,17,0.5)]",
+          "bg-foreground text-background hover:bg-foreground/90 shadow-[0_10px_30px_-12px_rgba(17,17,17,0.5)] hover:shadow-[0_22px_48px_-14px_rgba(17,17,17,0.6)]",
         secondary:
           "bg-transparent text-foreground border border-foreground/15 hover:border-foreground/40 hover:bg-foreground/[0.03]",
         ghost: "bg-transparent text-foreground hover:bg-foreground/[0.04]",
@@ -60,11 +60,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const Comp = asChild ? Slot : "button";
 
+    // Smooth, critically-damped hover/press — no abrupt jump.
+    // For magnetic buttons we skip the y-lift (the magnet already owns y).
+    const hover = reduce ? undefined : { scale: 1.035, ...(magnetic ? {} : { y: -4 }) };
+    const tap = reduce ? undefined : { scale: 0.96, ...(magnetic ? {} : { y: -1 }) };
+
     return (
       <motion.div
         style={{ x: magnetic ? sx : undefined, y: magnetic ? sy : undefined, display: "inline-flex" }}
         onPointerMove={onMove}
         onPointerLeave={onLeave}
+        whileHover={hover}
+        whileTap={tap}
+        transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
       >
         <Comp
           ref={(node: HTMLButtonElement) => {

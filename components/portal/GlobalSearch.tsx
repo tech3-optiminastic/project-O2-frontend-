@@ -68,21 +68,21 @@ export function GlobalSearch() {
           id: i.id,
           title: i.invoice_number,
           subtitle: `${formatINR(i.total_amount)} · ${i.status}`,
-          href: "/portal/invoices",
+          href: `/portal/invoices/${i.id}`,
         })),
         ...clients.slice(0, 5).map((c) => ({
           type: "client" as const,
           id: c.id,
           title: c.business_name,
           subtitle: c.email,
-          href: "/portal/clients",
+          href: `/portal/clients/${c.id}`,
         })),
         ...vendors.slice(0, 5).map((v) => ({
           type: "vendor" as const,
           id: v.id,
           title: v.business_name,
           subtitle: v.is_verified ? "Verified vendor" : "Vendor",
-          href: "/portal/vendors",
+          href: `/portal/vendors/${v.id}`,
         })),
       ];
       setHits(out);

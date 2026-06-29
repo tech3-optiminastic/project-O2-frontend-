@@ -214,3 +214,32 @@ export function Field({
 
 export const inputClass =
   "h-11 w-full rounded-xl border border-line bg-background px-3.5 text-sm outline-none transition-colors placeholder:text-ink-40 focus:border-foreground/40";
+
+/** Read-only labelled value used on detail / profile pages. */
+export function DataField({
+  label,
+  value,
+  mono,
+  className,
+}: {
+  label: string;
+  value?: ReactNode;
+  mono?: boolean;
+  className?: string;
+}) {
+  const empty = value === null || value === undefined || value === "";
+  return (
+    <div className={cn("flex flex-col gap-1", className)}>
+      <span className="text-[11px] tracking-eyebrow text-secondary">{label}</span>
+      <span
+        className={cn(
+          "text-sm font-light text-foreground",
+          mono && "tabular-nums",
+          empty && "text-ink-40",
+        )}
+      >
+        {empty ? "—" : value}
+      </span>
+    </div>
+  );
+}
