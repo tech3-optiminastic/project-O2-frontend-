@@ -14,6 +14,7 @@ import { api, ApiError, isWorkspaceEmail, WORKSPACE_EMAIL_DOMAIN, type SignupAva
 export default function SignupPage() {
   const { signup } = useAuth();
   const [available, setAvailable] = useState<boolean | null>(null);
+  const [reachError, setReachError] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,8 +24,12 @@ export default function SignupPage() {
   useEffect(() => {
     api
       .get<SignupAvailability>("/auth/signup-available")
-      .then((r) => setAvailable(r.available))
-      .catch(() => setAvailable(false));
+      .then((r) => {
+        setAvailable(r.available);
+        setReachError(false);
+      })
+      // A network/CORS failure is NOT "signups closed" — surface it honestly.
+      .catch(() => setReachError(true));
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -73,7 +78,21 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {available === false ? (
+        {reachError ? (
+          <>
+            <h1 className="text-3xl font-extralight tracking-tight">Can&apos;t reach the server</h1>
+            <p className="mt-3 text-sm font-light text-secondary">
+              The app couldn&apos;t connect to the API. This usually means the API URL is
+              misconfigured. Please try again shortly.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-8 w-full rounded-full bg-foreground py-3 text-sm font-medium text-background"
+            >
+              Retry
+            </button>
+          </>
+        ) : available === false ? (
           <>
             <h1 className="text-3xl font-extralight tracking-tight">Signups are closed</h1>
             <p className="mt-3 text-sm font-light text-secondary">
