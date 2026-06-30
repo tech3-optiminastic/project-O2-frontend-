@@ -11,17 +11,10 @@ import { Logo } from "@/components/ui/Logo";
 import { Field, inputClass } from "@/components/portal/ui";
 import { ApiError } from "@/lib/api";
 
-const demoUsers = [
-  { role: "Admin / CEO", email: "ceo@optiminastic.com" },
-  { role: "CFO", email: "cfo@optiminastic.com" },
-  { role: "Finance Manager", email: "manager@optiminastic.com" },
-  { role: "Finance Executive", email: "exec@optiminastic.com" },
-];
-
 export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("ceo@optiminastic.com");
-  const [password, setPassword] = useState("Password123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -96,23 +89,16 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-8 border-t border-line/60 pt-5">
-          <p className="text-[11px] tracking-eyebrow text-ink-40">Demo accounts · password Password123!</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {demoUsers.map((u) => (
-              <button
-                key={u.email}
-                onClick={() => {
-                  setEmail(u.email);
-                  setPassword("Password123!");
-                }}
-                className="rounded-xl border border-line bg-white/40 px-3 py-2 text-left text-xs transition-colors hover:bg-white/70"
-              >
-                <span className="block font-medium text-foreground">{u.role}</span>
-                <span className="block truncate text-ink-40">{u.email}</span>
-              </button>
-            ))}
-          </div>
+        <div className="mt-8 border-t border-line/60 pt-5 text-center">
+          <p className="text-sm font-light text-secondary">
+            First time setting up your workspace?{" "}
+            <Link href="/portal/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Create your account
+            </Link>
+          </p>
+          <p className="mt-2 text-[11px] tracking-eyebrow text-ink-40">
+            Joined by invite? Use the link in your email to set a password.
+          </p>
         </div>
       </motion.div>
     </div>

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   ScrollText,
+  UserPlus,
   LogOut,
   Bell,
   PanelLeftClose,
@@ -53,6 +54,7 @@ const navGroups = [
       { href: "/portal/approvals", label: "Approvals", icon: ShieldCheck },
       { href: "/portal/verification", label: "Verification", icon: CheckCircle2 },
       { href: "/portal/audit", label: "Audit Trail", icon: ScrollText },
+      { href: "/portal/team", label: "Admin", icon: UserPlus },
     ],
   },
 ];

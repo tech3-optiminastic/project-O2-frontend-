@@ -402,7 +402,7 @@ function VendorInvoiceForm({
           <input type="checkbox" name="tds_applicable" defaultChecked className="accent-foreground" /> TDS applicable
         </label>
 
-        <div className="sm:col-span-2 grid grid-cols-3 gap-3 rounded-2xl border border-line bg-mist/50 p-4 text-center text-sm">
+        <div className="sm:col-span-2 grid grid-cols-1 gap-3 rounded-2xl border border-line bg-mist/50 p-4 text-center text-sm sm:grid-cols-3">
           <div>
             <p className="text-xs text-ink-40">TDS</p>
             <p className="mt-1 font-medium tabular-nums">{formatINR(tds)}</p>

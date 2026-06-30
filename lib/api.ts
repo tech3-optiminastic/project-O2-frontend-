@@ -2,6 +2,15 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8009/api";
 
+/** Only emails on this domain may sign up or be invited (mirrors backend WORKSPACE_EMAIL_DOMAIN). */
+export const WORKSPACE_EMAIL_DOMAIN =
+  process.env.NEXT_PUBLIC_WORKSPACE_EMAIL_DOMAIN ?? "optiminastic.com";
+
+/** True if the email belongs to the workspace domain. */
+export function isWorkspaceEmail(email: string): boolean {
+  return email.trim().toLowerCase().endsWith("@" + WORKSPACE_EMAIL_DOMAIN.toLowerCase());
+}
+
 const TOKEN_KEY = "o2_token";
 
 export function getToken(): string | null {
@@ -90,6 +99,41 @@ export interface CurrentUser {
   is_active: boolean;
 }
 
+export interface SignupAvailability {
+  available: boolean;
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+  created_at: string;
+}
+
+export type InvitationStatus = "Pending" | "Accepted" | "Revoked";
+
+export interface Invitation {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  status: InvitationStatus;
+  expires_at: string;
+  accepted_at?: string | null;
+  created_at: string;
+  accept_url?: string | null;
+  email_sent?: boolean | null;
+}
+
+export interface InvitePreview {
+  name: string;
+  email: string;
+  role: Role;
+  valid: boolean;
+}
+
 export interface DashboardSummary {
   total_clients: number;
   total_vendors: number;
@@ -168,6 +212,20 @@ export interface Payment {
   gst_component: number;
   remarks?: string | null;
   attachment?: string | null;
+}
+
+export interface PaymentReceipt {
+  id: number;
+  invoice_id: number;
+  invoice_number: string;
+  client_id: number;
+  amount: number;
+  payment_date: string;
+  payment_mode: string;
+  bank_reference?: string | null;
+  tds_deducted: number;
+  gst_component: number;
+  remarks?: string | null;
 }
 
 export interface Invoice {

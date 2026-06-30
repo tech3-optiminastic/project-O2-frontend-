@@ -20,6 +20,7 @@ const RESTRICTED: { prefix: string; roles: Role[] }[] = [
   { prefix: "/portal/taxation", roles: NON_EXEC },
   { prefix: "/portal/approvals", roles: NON_EXEC },
   { prefix: "/portal/audit", roles: ["ADMIN_CEO"] },
+  { prefix: "/portal/team", roles: ["ADMIN_CEO"] },
 ];
 
 /** True if the given role may see/open the given portal path. */
